@@ -20,15 +20,15 @@ Then, in the root directory of your repo:
 
 ```Makefile
 # Required for go.mk
-name := my-service
+name = my-service
 
 # Required for docker.mk
-docker_image := username/my-service
-docker_tag := latest
+docker_image = username/my-service
+docker_tag = latest
 
 # Required for grpc.mk
-proto_path := idl
-go_out_path := internal/proto
+proto_path = idl
+go_out_path = internal/proto
 
 -include make/go.mk
 -include make/docker.mk
