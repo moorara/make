@@ -8,8 +8,8 @@ For referencing this repo in other git repositories, you can use [git submodules
 In your git repository, add this repo as a git submodule:
 
 ```
-git submodule add https://github.com:moorara/make.git
 git submodule init
+git submodule add https://github.com:moorara/make.git
 ```
 
 Then, in the root directory of your repo:
@@ -33,6 +33,7 @@ go_out_path = internal/proto
 -include make/go.mk
 -include make/docker.mk
 -include make/grpc.mk
+-include make/terraform.mk
 ```
 
 For upgrading the _make_ submodule, run:
