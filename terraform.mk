@@ -34,15 +34,6 @@ commit := $(shell git rev-parse --short HEAD)
 ## RULES
 ##
 
-.PHONY: clean
-clean:
-	@ rm -rf .terraform terraform.tfstate terraform.tfstate.backup
-
-.PHONY: init
-init:
-	terraform init \
-	  -backend-config=""
-
 .PHONY: validate
 validate:
 	@ terraform validate
@@ -78,3 +69,7 @@ destroy:
 	  -var owner=$(owner) \
 	  -var git_branch=$(branch) \
 	  -var git_commit=$(commit)
+
+.PHONY: clean-terraform
+clean-terraform:
+	@ rm -rf .terraform terraform.tfstate terraform.tfstate.backup
