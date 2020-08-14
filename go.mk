@@ -11,15 +11,28 @@
 # Computes a semantic version from the latest git tag
 # Read more: https://semver.org
 define compute_semver
-	git_tag = $(shell git describe --tags --abbrev=0)
-	ifeq ($$(git_tag),)
-		$(1) := 0.1.0
-	else
-		semver = $$(shell echo $$(git_tag) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
+	git_describe = $(shell git describe --tags 2> /dev/null)
+
+	# No tag --> initial semantic version + pre-release version
+	ifndef git_describe
+		$(1) := 0.1.0-$$(shell git rev-parse --short HEAD)
+	endif
+
+	# The tag refers to HEAD commit --> current semantic version
+	release = $(shell echo $(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+$$')
+	ifdef release
+		semver = $$(shell echo $$(release) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
+		$(1) := $$(semver)
+	endif
+
+	# The tag refers to a previous commit --> next semantic version + pre-release version
+	prerelease = $(shell echo $(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-[0-9a-g]+$$')
+	ifdef prerelease
+		semver = $$(shell echo $$(prerelease) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
 		major = $$(shell echo $$(semver) | cut -d '.' -f 1)
 		minor = $$(shell echo $$(semver) | cut -d '.' -f 2)
 		patch = $$(shell echo $$(semver) | cut -d '.' -f 3)
-		$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))
+		$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))-$$(shell git rev-parse --short HEAD)
 	endif
 endef
 
@@ -55,8 +68,7 @@ platforms := linux-386 linux-amd64 linux-arm linux-arm64 darwin-386 darwin-amd64
 ## )
 ##
 
-$(eval $(call compute_semver,semver))
-version := $(semver)
+$(eval $(call compute_semver,version))
 revision := $(shell git rev-parse --short HEAD)
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 go_version := $(shell go version | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
