@@ -11,28 +11,53 @@
 # Computes a semantic version from the latest git tag
 # Read more: https://semver.org
 define compute_semver
+	git_status = $(shell git status --porcelain)
 	git_describe = $(shell git describe --tags 2> /dev/null)
 
-	# No tag --> initial semantic version + pre-release version
+	# No git tag and no previous semantic version --> using the default initial semantic version
 	ifndef git_describe
-		$(1) := 0.1.0-$$(shell git rev-parse --short HEAD)
+		commit_count = $$(shell git rev-list --count HEAD)
+		git_sha = $$(shell git rev-parse --short HEAD)
+
+		ifdef git_status
+			$(1) := 0.1.0-$$(commit_count).dev
+		else
+			$(1) := 0.1.0-$$(commit_count).$$(git_sha)
+		endif
 	endif
 
 	# The tag refers to HEAD commit --> current semantic version
+	# Example: v0.2.7
 	release = $(shell echo $(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+$$')
 	ifdef release
 		semver = $$(shell echo $$(release) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
-		$(1) := $$(semver)
+		major = $$(shell echo $$(semver) | cut -d '.' -f 1)
+		minor = $$(shell echo $$(semver) | cut -d '.' -f 2)
+		patch = $$(shell echo $$(semver) | cut -d '.' -f 3)
+
+		ifdef git_status
+			$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))-0.dev
+		else
+			$(1) := $$(major).$$(minor).$$(patch)
+		endif
 	endif
 
 	# The tag refers to a previous commit --> next semantic version + pre-release version
-	prerelease = $(shell echo $(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-[0-9a-g]+$$')
+	# Example: v0.2.7-10-gabcdef
+	prerelease = $(shell echo $(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-g[0-9a-f]+$$')
 	ifdef prerelease
 		semver = $$(shell echo $$(prerelease) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
 		major = $$(shell echo $$(semver) | cut -d '.' -f 1)
 		minor = $$(shell echo $$(semver) | cut -d '.' -f 2)
 		patch = $$(shell echo $$(semver) | cut -d '.' -f 3)
-		$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))-$$(shell git rev-parse --short HEAD)
+		commit_count = $$(shell echo $$(prerelease) | cut -d '-' -f 2)
+		git_sha = $$(shell git rev-parse --short HEAD)
+
+		ifdef git_status
+			$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))-$$(commit_count).dev
+		else
+			$(1) := $$(major).$$(minor).$$$$(( $$(patch) + 1 ))-$$(commit_count).$$(git_sha)
+		endif
 	endif
 endef
 
@@ -48,7 +73,7 @@ endef
 ##
 
 build_dir := bin
-platforms := linux-386 linux-amd64 linux-arm linux-arm64 darwin-386 darwin-amd64 windows-386 windows-amd64
+platforms := linux-386 linux-amd64 linux-arm linux-arm64 darwin-amd64 windows-386 windows-amd64
 
 
 ## BUILD METADATA & FLAGS

@@ -4,6 +4,8 @@
 ##   - proto_path
 ##   - go_out_path
 ##
+## Proto files belonging to the same package expected to be in a directory with the same name as the package name.
+##
 
 
 ## MACROS
@@ -14,9 +16,9 @@ define get_os_arch
 	arch = $(shell uname -m)
 	os_name = $(shell uname -s | tr [:upper:] [:lower:])
 	ifeq ($$(os_name),linux)
-		$(1) := $$(os_name)-$$(arch)
+		$(1) = $$(os_name)-$$(arch)
 	else ifeq ($$(os_name),darwin)
-		$(1) := osx-$$(arch)
+		$(1) = osx-$$(arch)
 	endif
 endef
 
@@ -34,10 +36,11 @@ protoc_version = $(shell echo $(protoc_release) | cut -c2-)
 
 .PHONY: check-tools
 check-tools:
-	@ command -v git
-	@ command -v jq
 	@ command -v curl
+	@ command -v jq
 	@ command -v unzip
+	@ command -v git
+	@ command -v go
 
 .PHONY: protoc
 protoc: check-tools
@@ -56,4 +59,4 @@ protobuf:
 	protoc \
 	  --proto_path=$(proto_path) \
 	  --go_out=paths=source_relative,plugins=grpc:$(go_out_path) \
-	  $(proto_path)/*.proto
+	  $(foreach proto_file, $(shell find $(proto_path) -name '*.proto'), $(proto_file))
