@@ -3,6 +3,9 @@
 ## The following variables need to be defined where this file is included:
 ##   - name
 ##
+## The following files need to be included where this file is included:
+##   - common.mk
+##
 
 
 ## MACROS
@@ -65,7 +68,8 @@ endef
 define cross_compile
 	GOOS=$(shell echo $(1) | cut -d '-' -f 1) \
 	GOARCH=$(shell echo $(1) | cut -d '-' -f 2) \
-	go build $(ldflags) -o $(build_dir)/$(name)-$(1);
+	go build -ldflags $(ldflags) -o $(build_dir)/$(name)-$(1)
+	$(call echo_green,$(build_dir)/$(name)-$(1));
 endef
 
 
@@ -107,7 +111,7 @@ branch_flag := -X $(version_package).Branch=$(branch)
 go_version_flag := -X $(version_package).GoVersion=$(go_version)
 build_tool_flag := -X $(version_package).BuildTool=$(build_tool)
 build_time_flag := -X $(version_package).BuildTime=$(build_time)
-ldflags := -ldflags "$(version_flag) $(revision_flag) $(branch_flag) $(go_version_flag) $(build_tool_flag) $(build_time_flag)"
+ldflags := '$(version_flag) $(revision_flag) $(branch_flag) $(go_version_flag) $(build_tool_flag) $(build_time_flag)'
 
 
 ## RULES
@@ -136,12 +140,13 @@ run:
 
 .PHONY: build
 build:
-	go build $(ldflags) -o $(name)
+	@ go build -ldflags $(ldflags) -o $(name)
+	@ $(call echo_green,$(name))
 
 .PHONY: build-all
 build-all:
 	@ mkdir -p $(build_dir)
-	$(foreach platform, $(platforms), $(call cross_compile,$(platform)))
+	@ $(foreach platform, $(platforms), $(call cross_compile,$(platform)))
 
 .PHONY: clean-build
 clean-build:
