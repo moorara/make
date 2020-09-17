@@ -19,22 +19,17 @@ Then, in the root directory of your repo:
   1. Import `mk` files from `make` subdirectory
 
 ```Makefile
-# Required for go.mk
-name = my-service
-
-# Required for grpc.mk
-proto_path = idl
-go_out_path = internal/proto
-
-# Required for docker.mk
-docker_image = username/my-service
-docker_tag = latest
-
 include make/common.mk
 include make/go.mk
 include make/grpc.mk
 include make/docker.mk
 include make/terraform.mk
+
+name := my-service                   # Required by go.mk
+proto_path := idl                    # Required by grpc.mk
+go_out_path := internal/proto        # Required by grpc.mk
+docker_image := username/my-service  # Required by docker.mk
+docker_tag := latest                 # Required by docker.mk
 ```
 
 For upgrading the _make_ submodule, run:

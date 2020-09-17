@@ -9,13 +9,18 @@
 ## RULES
 ##
 
-.PHONY: docker
 docker:
-	docker image build -t $(docker_image):$(docker_tag) .
+	@ docker image build \
+	    --build-arg ldflags=$(ldflags) \
+	    --tag $(docker_image):$(docker_tag) \
+	    .
 
 .PHONY: docker-test
 docker-test:
-	docker image build --file Dockerfile.test --tag $(docker_image):$(docker_tag) .
+	@ docker image build \
+	    --file Dockerfile.test \
+	    --tag $(docker_image):$(docker_tag) \
+	    .
 
 .PHONY: push
 push:
