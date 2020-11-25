@@ -9,7 +9,7 @@ In your git repository, add this repo as a git submodule:
 
 ```
 git submodule init
-git submodule add https://github.com:moorara/make.git
+git submodule add -b main https://github.com:moorara/make.git
 ```
 
 Then, in the root directory of your repo:
