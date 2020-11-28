@@ -102,15 +102,15 @@ commit := $(shell git rev-parse --short HEAD)
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 go_version := $(shell go version | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
 build_tool := github.com/moorara/make
-build_time := $(shell date +%Y-%m-%dT%T%z)
+build_time := $(shell date +%Y-%m-%d %T %Z)
 
 version_package := $(shell go list ./... | grep -E 'version$$' | head -n 1)
-version_flag := -X $(version_package).Version=$(version)
-commit_flag := -X $(version_package).Commit=$(commit)
-branch_flag := -X $(version_package).Branch=$(branch)
-go_version_flag := -X $(version_package).GoVersion=$(go_version)
-build_tool_flag := -X $(version_package).BuildTool=$(build_tool)
-build_time_flag := -X $(version_package).BuildTime=$(build_time)
+version_flag := -X "$(version_package).Version=$(version)"
+commit_flag := -X "$(version_package).Commit=$(commit)"
+branch_flag := -X "$(version_package).Branch=$(branch)"
+go_version_flag := -X "$(version_package).GoVersion=$(go_version)"
+build_tool_flag := -X "$(version_package).BuildTool=$(build_tool)"
+build_time_flag := -X "$(version_package).BuildTime=$(build_time)"
 ldflags := '$(version_flag) $(commit_flag) $(branch_flag) $(go_version_flag) $(build_tool_flag) $(build_time_flag)'
 
 
