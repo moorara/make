@@ -102,7 +102,7 @@ commit := $(shell git rev-parse --short HEAD)
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 go_version := $(shell go version | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
 build_tool := github.com/moorara/make
-build_time := $(shell date +%Y-%m-%d %T %Z)
+build_time := $(shell date '+%Y-%m-%d %T %Z')
 
 version_package := $(shell go list ./... | grep -E 'version$$' | head -n 1)
 version_flag := -X "$(version_package).Version=$(version)"
