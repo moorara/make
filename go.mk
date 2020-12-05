@@ -11,61 +11,6 @@
 ## MACROS
 ##
 
-# Computes a semantic version from the latest git tag
-# Read more: https://semver.org
-define compute_semver
-	git_status = $(shell git status --porcelain)
-	git_describe = $(shell git describe --tags 2> /dev/null)
-
-	# No git tag and no previous semantic version --> using the default initial semantic version
-	ifndef git_describe
-		commit_count = $(shell git rev-list --count HEAD)
-		git_sha = $(shell git rev-parse --short HEAD)
-
-		ifdef git_status
-			$(1) := 0.1.0-$$(commit_count).dev
-		else
-			$(1) := 0.1.0-$$(commit_count).$$(git_sha)
-		endif
-	endif
-
-	# The tag refers to HEAD commit --> current semantic version
-	# Example: v0.2.7
-	release = $$(shell echo $$(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+$$$$')
-	ifdef release
-		semver = $$(shell echo $$(release) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
-		major = $$(shell echo $$(semver) | cut -d '.' -f 1)
-		minor = $$(shell echo $$(semver) | cut -d '.' -f 2)
-		patch = $$(shell echo $$(semver) | cut -d '.' -f 3)
-		next_patch = $$(shell echo $$$$(($$(patch)+1)))
-
-		ifdef git_status
-			$(1) := $$(major).$$(minor).$$(next_patch)-0.dev
-		else
-			$(1) := $$(major).$$(minor).$$(patch)
-		endif
-	endif
-
-	# The tag refers to a previous commit --> next semantic version + pre-release version
-	# Example: v0.2.7-10-gabcdef
-	prerelease = $$(shell echo $$(git_describe) | grep -E -o '^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-g[0-9a-f]+$$$$')
-	ifdef prerelease
-		semver = $$(shell echo $$(prerelease) | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
-		major = $$(shell echo $$(semver) | cut -d '.' -f 1)
-		minor = $$(shell echo $$(semver) | cut -d '.' -f 2)
-		patch = $$(shell echo $$(semver) | cut -d '.' -f 3)
-		next_patch = $$(shell echo $$$$(($$(patch)+1)))
-		commit_count = $$(shell echo $$(prerelease) | cut -d '-' -f 2)
-		git_sha = $(shell git rev-parse --short HEAD)
-
-		ifdef git_status
-			$(1) := $$(major).$$(minor).$$(next_patch)-$$(commit_count).dev
-		else
-			$(1) := $$(major).$$(minor).$$(next_patch)-$$(commit_count).$$(git_sha)
-		endif
-	endif
-endef
-
 # Compiles a binary for a target platform
 define cross_compile
 	GOOS=$(shell echo $(1) | cut -d '-' -f 1) \
@@ -77,6 +22,8 @@ endef
 
 ## VARIABLES
 ##
+
+make_dir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 build_dir := bin
 platforms := linux-386 linux-amd64 linux-arm linux-arm64 darwin-amd64 windows-386 windows-amd64
@@ -99,7 +46,7 @@ platforms := linux-386 linux-amd64 linux-arm linux-arm64 darwin-amd64 windows-38
 ## )
 ##
 
-$(eval $(call compute_semver,version))
+version := $(shell $(make_dir)/semver.sh)
 commit := $(shell git rev-parse --short HEAD)
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 go_version := $(shell go version | grep -E -o '[0-9]+\.[0-9]+\.[0-9]+')
